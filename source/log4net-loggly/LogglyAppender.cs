@@ -20,7 +20,7 @@ namespace log4net.loggly
 		protected override void Append(LoggingEvent loggingEvent)
 		{
 			Formatter.AppendAdditionalLoggingInformation(Config, loggingEvent);
-			Client.Send(Config, Config.InputKey, Formatter.ToJson(loggingEvent));
+			Client.Send(Config, Config.InputKey, Config.UserAgent, Formatter.ToJson(loggingEvent));
 		}
 	}
 }

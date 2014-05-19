@@ -25,7 +25,7 @@ namespace log4net.loggly
 
 		protected override void SendBuffer(LoggingEvent[] loggingEvents)
 		{
-			Client.Send(Config, Config.InputKey, Formatter.ToJson(loggingEvents));
+			Client.Send(Config, Config.InputKey, Formatter.ToJson(loggingEvents), Config.UserAgent);
 		}
 	}
 }
