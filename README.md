@@ -2,3 +2,29 @@ log4net-loggly
 ==============
 
 Custom log4net appenders for importing logging events to loggly.
+
+
+Add the following code in your web.config to configure LogglyAppender in your application
+
+    <configSections>
+      <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net" />
+    </configSections>
+    <log4net>
+      <root>
+        <level value="ALL" />
+        <appender-ref ref="LogglyAppender" />
+      </root>
+      <appender name="LogglyAppender" type="log4net.loggly.LogglyAppender, log4net-loggly">
+        <rootUrl value="http://logs-01.loggly.com/" />
+        <inputKey value="your-customer-token" />
+      </appender>
+    </log4net>
+    
+
+Create an object of the Log class using LogManager
+
+    var logger = LogManager.GetLogger(typeof(Class));
+    
+Send logs to Loggly using the following code
+  
+    logger.Info("log message");
