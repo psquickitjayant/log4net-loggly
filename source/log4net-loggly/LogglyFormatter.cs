@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using ServiceStack.Text;
 using log4net.Core;
+using ServiceStack;
 
 namespace log4net.loggly
 {
@@ -22,12 +23,12 @@ namespace log4net.loggly
 
         public virtual string ToJson(LoggingEvent loggingEvent)
         {
-            return PreParse(loggingEvent).Dump();
+            return StringExtensions.ToJson(PreParse(loggingEvent));
         }
 
 		public virtual string ToJson(IEnumerable<LoggingEvent> loggingEvents)
 		{
-			return loggingEvents.Select(PreParse).Dump();
+            return StringExtensions.ToJson(loggingEvents.Select(PreParse));
 		}
 
 		private object PreParse(LoggingEvent loggingEvent)
