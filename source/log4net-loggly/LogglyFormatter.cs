@@ -21,14 +21,14 @@ namespace log4net.loggly
 		{
 		}
 
-        public virtual string ToJson(LoggingEvent loggingEvent)
-        {
-            return StringExtensions.ToJson(PreParse(loggingEvent));
-        }
+	        public virtual string ToJson(LoggingEvent loggingEvent)
+	        {
+	            return StringExtensions.ToJson(PreParse(loggingEvent));
+	        }
 
 		public virtual string ToJson(IEnumerable<LoggingEvent> loggingEvents)
 		{
-            return StringExtensions.ToJson(loggingEvents.Select(PreParse));
+    		    return StringExtensions.ToJson(loggingEvents.Select(PreParse));
 		}
 
 		private object PreParse(LoggingEvent loggingEvent)
