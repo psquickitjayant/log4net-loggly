@@ -38,16 +38,38 @@ namespace log4net.loggly
 			{
 				exceptionString = null; //ensure empty strings aren't included in the json output.
 			}
-			return new
-			       	{
-			       		level = loggingEvent.Level.DisplayName,
-			       		time = loggingEvent.TimeStamp.ToString("yyyyMMdd HHmmss.fff zzz"),
-						machine = Environment.MachineName,
-						process = _currentProcess.ProcessName,
-						thread = loggingEvent.ThreadName,
-						message = loggingEvent.MessageObject,
-						ex = exceptionString,
-			       	};
+			//as loggly dashboard does not allow a field to change its type
+	                //e.g. if messageinfo field has plain text value then for the next time
+	                //loggly will not allow it to handle messageinfo field value as a object 
+	                //so if the message value in not a string type then use field objectinfo
+	
+	                if (loggingEvent.MessageObject.GetType() == typeof(string))
+	                {
+        	        	return new
+		                {
+	                    		level = loggingEvent.Level.DisplayName,
+		                    	time = loggingEvent.TimeStamp.ToString("yyyyMMdd HHmmss.fff zzz"),
+		                    	machine = Environment.MachineName,
+		                    	process = _currentProcess.ProcessName,
+		                    	thread = loggingEvent.ThreadName,
+		                    	messageinfo = loggingEvent.MessageObject,
+		                    	ex = exceptionString,
+		                };
+	            	}
+	
+	            	else
+	            	{
+	                	return new
+	                	{
+            		   		level = loggingEvent.Level.DisplayName,
+                    		   	time = loggingEvent.TimeStamp.ToString("yyyyMMdd HHmmss.fff zzz"),
+	                    		machine = Environment.MachineName,
+	                    		process = _currentProcess.ProcessName,
+	                    		thread = loggingEvent.ThreadName,
+	                    		objectinfo = loggingEvent.MessageObject,
+	                    		ex = exceptionString,
+	                };
+	            }
 		}
 	}
 }
