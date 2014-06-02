@@ -40,8 +40,8 @@ namespace log4net.loggly
 			}
 			//as loggly dashboard does not allow a field to change its type
 	                //e.g. if messageinfo field has plain text value then for the next time
-	                //loggly will not allow it to handle messageinfo field value as a object 
-	                //so if the message value in not a string type then use field objectinfo
+	                //loggly will not allow it to handle value as an object 
+	                //so if the MessageObject value in not a string type then use field objectinfo
 	
 	                if (loggingEvent.MessageObject.GetType() == typeof(string))
 	                {
