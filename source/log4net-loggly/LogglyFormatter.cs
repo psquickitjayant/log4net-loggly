@@ -32,18 +32,17 @@ namespace log4net.loggly
 
 		private object PreParse(LoggingEvent loggingEvent)
 		{
-            //NOTE: Empty objects are sent as string.Empty because empty objects are not indexed in the Loggly
-            //so they won't show up in the json messages
+            //NOTE: 
+            //1. Empty objects are sent as string.Empty because empty objects are not indexed in the Loggly so they won't show up in the json messages
+            //2. null fields are shown as "none" in the Loggly
 
             //managing exceptions
             object exceptionInfo = getExceptionInfo(loggingEvent);
             
-            //managing messages
-            string message = getMessageInfo(loggingEvent);
+            //managing messages and custom objects
+            object objInfo = string.Empty;
+            string message = getMessageAndObjectInfo(loggingEvent, out objInfo);
             
-            //managing custom objects
-            object objInfo = getCustomObjectInfo(loggingEvent);
-
 			return new
             {
                 level = loggingEvent.Level.DisplayName,
@@ -70,7 +69,8 @@ namespace log4net.loggly
             object exceptionInfo = string.Empty;
             if (loggingEvent.ExceptionObject != null)
             {
-                object innerException = string.Empty;
+                //if there is not any inner exception, then it must be shown as "None" in the loggly 
+                object innerException = null;
 
                 //most of the times .net exceptions contain important messages in the inner exceptions
                 if (loggingEvent.ExceptionObject.InnerException != null)
@@ -78,16 +78,16 @@ namespace log4net.loggly
                     innerException = new
                     {
                         innerExceptionType = loggingEvent.ExceptionObject.InnerException.GetType().FullName,
-                        innerExceptionMessage = loggingEvent.ExceptionObject.InnerException.Message ?? string.Empty,
-                        innerStacktrace = loggingEvent.ExceptionObject.InnerException.StackTrace ?? string.Empty,
+                        innerExceptionMessage = loggingEvent.ExceptionObject.InnerException.Message,
+                        innerStacktrace = loggingEvent.ExceptionObject.InnerException.StackTrace,
                     };
                 }
 
                 exceptionInfo = new
                 {
                     exceptionType = loggingEvent.ExceptionObject.GetType().FullName,
-                    exceptionMessage = loggingEvent.ExceptionObject.Message ?? string.Empty,
-                    stacktrace = loggingEvent.ExceptionObject.StackTrace ?? string.Empty,
+                    exceptionMessage = loggingEvent.ExceptionObject.Message,
+                    stacktrace = loggingEvent.ExceptionObject.StackTrace,
                     innerExceptionInfo = innerException
                 };
             }
@@ -95,45 +95,28 @@ namespace log4net.loggly
         }
 
         /// <summary>
-        /// Returns a string type message if it is not a custom object
+        /// Returns a string type message if it is not a custom object,
+        /// otherwise returns custom object details
         /// </summary>
         /// <param name="loggingEvent"></param>
         /// <returns></returns>
-        private string getMessageInfo(LoggingEvent loggingEvent)
+        private string getMessageAndObjectInfo(LoggingEvent loggingEvent, out object objInfo)
         {
             string message = string.Empty;
-            if (loggingEvent.MessageObject.GetType() == typeof(string))
+            
+            if (loggingEvent.MessageObject.GetType() == typeof(string)
+                //if it is sent by using InfoFormat method then treat it as a string message
+                || loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat")
             {
                 message = loggingEvent.MessageObject.ToString();
+                objInfo = string.Empty;
             }
-            //if it is sent by using InfoFormat method then treat it as a string message
-            else if (loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat")
-            {
-                message = loggingEvent.MessageObject.ToString();
-            }
-
-            return message;
-        }
-
-        /// <summary>
-        /// Returns the custom object info if it is not a string. Else string.Empty
-        /// </summary>
-        /// <param name="loggingEvent"></param>
-        /// <returns></returns>
-        private object getCustomObjectInfo(LoggingEvent loggingEvent)
-        {
-            //Loggly does not allow to same field vary it types
-            //like "message" field can't be used for both string type message and other custom objects
-            
-            object objInfo = string.Empty;
-            
-            if(loggingEvent.MessageObject.GetType() != typeof(string)
-                && loggingEvent.MessageObject.GetType().FullName != "log4net.Util.SystemStringFormat")
+            else
             {
                 objInfo = loggingEvent.MessageObject;
             }
-
-            return objInfo;
+            return message;
         }
+
 	}
 }
