@@ -3,6 +3,8 @@ log4net-loggly
 
 Custom log4net appenders for importing logging events to loggly.
 
+Download log4net-loggly package from NuGet. Use the following command
+    Install-Package log4net-loggly
 
 Add the following code in your web.config to configure LogglyAppender in your application
 
