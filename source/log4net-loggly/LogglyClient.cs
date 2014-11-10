@@ -6,11 +6,18 @@ namespace log4net.loggly
 {
 	public class LogglyClient : ILogglyClient
 	{
-		public virtual void Send(ILogglyAppenderConfig config, string inputKey,string userAgent, string message)
+		public virtual void Send(ILogglyAppenderConfig config, string inputKey,string userAgent, string tag, string message)
 		{
+            string _tag = string.IsNullOrWhiteSpace(tag) ? config.Tag : tag;
+            
+            //keeping userAgent backward compatible
+            if (!string.IsNullOrWhiteSpace(userAgent))
+            {
+                _tag = _tag + "," + userAgent;
+            }
+
 			var bytes = Encoding.UTF8.GetBytes(message);
-    			var request = CreateWebRequest(config, string.IsNullOrWhiteSpace(inputKey) ? config.InputKey : 
-                    inputKey, string.IsNullOrWhiteSpace(userAgent) ? config.UserAgent : userAgent);
+    			var request = CreateWebRequest(config, _tag);
 			
             using (var dataStream = request.GetRequestStream())
 			{
@@ -22,13 +29,11 @@ namespace log4net.loggly
 			response.Close();
 		}
 
-		protected virtual HttpWebRequest CreateWebRequest(ILogglyAppenderConfig config, string inputKey, string userAgent)
+		protected virtual HttpWebRequest CreateWebRequest(ILogglyAppenderConfig config, string tag)
 		{
-            string tagInfo = userAgent;
-			var url = String.Concat(config.RootUrl, inputKey);
-
-	                //adding userAgent as tag in the log
-	                url = String.Concat(url, "/tag/" + userAgent);
+			var url = String.Concat(config.RootUrl, config.InputKey);
+	        //adding userAgent as tag in the log
+	        url = String.Concat(url, "/tag/" + tag);
 			var request = (HttpWebRequest)WebRequest.Create(url);
 			request.Method = "POST";
 			request.ReadWriteTimeout = request.Timeout = config.TimeoutInSeconds * 1000;

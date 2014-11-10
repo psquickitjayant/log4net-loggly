@@ -16,11 +16,12 @@ namespace log4net.loggly
 		public string InputKey { set { Config.InputKey = value; } }
 		public string UserAgent { set { Config.UserAgent = value; } }
 		public int TimeoutInSeconds { set { Config.TimeoutInSeconds = value; } }
+        public string Tag { set { Config.Tag = value; } }
 
 		protected override void Append(LoggingEvent loggingEvent)
 		{
 			Formatter.AppendAdditionalLoggingInformation(Config, loggingEvent);
-			Client.Send(Config, Config.InputKey, Config.UserAgent, Formatter.ToJson(loggingEvent));
+			Client.Send(Config, Config.InputKey, Config.UserAgent, Config.Tag, Formatter.ToJson(loggingEvent));
 		}
 	}
 }

@@ -27,10 +27,13 @@ namespace log4net.loggly
 
 		public int TimeoutInSeconds { get; set; }
 
+        public string Tag { get; set; }
+
 		public LogglyAppenderConfig()
 		{
 			UserAgent = "loggly-log4net-appender";
 			TimeoutInSeconds = 30;
+            Tag = "log4net";
 		}
 	}
 }
