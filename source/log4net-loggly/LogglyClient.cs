@@ -40,7 +40,30 @@ namespace log4net.loggly
 			request.UserAgent = config.UserAgent;
 			request.KeepAlive = true;
 			request.ContentType = "application/json";
+
+            //adding x-forwarded-for header
+            request.Headers.Add("x-forwarded-for", GetIPAddressOfMachine());
+
 			return request;
 		}
+
+        /// <summary>
+        /// Returns the IP Address of the Client
+        /// </summary>
+        /// <returns>IP Address</returns>
+        private string GetIPAddressOfMachine()
+        {
+            var addressess = Dns.GetHostAddresses(Environment.MachineName);
+            foreach (var addrs in addressess)
+            {
+                if (addrs.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    return addrs.ToString();
+                }
+            }
+
+            //If no IP Address is found then return machine name
+            return Environment.MachineName;
+        }
 	}
 }
