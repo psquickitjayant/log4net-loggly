@@ -25,8 +25,29 @@ namespace log4net.loggly
 				dataStream.Flush();
 				dataStream.Close();
 			}
-			var response = request.GetResponse();
-			response.Close();
+
+            //creating an action for async call
+            Action wrapperAction = () =>
+            {
+                //sending aysnc request 
+                request.BeginGetResponse((result) =>
+                {
+                    try
+                    {
+                        var response = (result.AsyncState as HttpWebRequest).EndGetResponse(result);
+                        response.Close();
+                    }
+                    catch { }
+
+                }, request);
+            };
+
+            wrapperAction.BeginInvoke(new AsyncCallback((result) =>
+            {
+                var action = result.AsyncState as Action;
+                action.EndInvoke(result);
+
+            }), wrapperAction);
 		}
 
 		protected virtual HttpWebRequest CreateWebRequest(ILogglyAppenderConfig config, string tag)
