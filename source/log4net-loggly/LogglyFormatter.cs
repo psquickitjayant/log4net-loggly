@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using log4net.Core;
 using Newtonsoft.Json;
+using System.Dynamic;
 
 namespace log4net.loggly
 {
@@ -57,7 +58,11 @@ namespace log4net.loggly
             var ndcStack = log4net.ThreadContext.Stacks["NDC"];
             if (ndcStack != null)
             {
-                d.ndcStack = ndcStack.ToString();
+                var stackText = ndcStack.ToString();
+                if (stackText != null)
+                {
+                    d.ndcStack = stackText;
+                }
             }
 
             return d;

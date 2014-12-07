@@ -4,17 +4,18 @@ using log4net;
 
 namespace log4net_loggly_console
 {
-	class Program
-	{
+    class Program
+    {
         static void Main(string[] argArray)
         {
             log4net.Config.XmlConfigurator.Configure();
 
             var log = LogManager.GetLogger(typeof(Program));
 
+
+            log.Error("oops", new ArgumentOutOfRangeException("argArray"));
             using (log4net.ThreadContext.Stacks["NDC"].Push("STACKVALUE1"))
             {
-                log.Error("oops", new ArgumentOutOfRangeException("argArray"));
                 log.Warn("hmmm", new ApplicationException("app exception"));
                 using (log4net.ThreadContext.Stacks["NDC"].Push("STACKVALUE2"))
                 {
@@ -30,5 +31,5 @@ namespace log4net_loggly_console
             thread.Name = "Main Thread";
             log.Info("Thread test");
         }
-	}
+    }
 }
