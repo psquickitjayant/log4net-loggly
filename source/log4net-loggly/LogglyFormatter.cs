@@ -42,19 +42,25 @@ namespace log4net.loggly
             //managing messages and custom objects
             object objInfo = string.Empty;
             string message = getMessageAndObjectInfo(loggingEvent, out objInfo);
-            
-			return new
+
+            var d = (dynamic)new ExpandoObject();
+            d.level = loggingEvent.Level.DisplayName;
+            d.timeStamp = loggingEvent.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss.fff zzz");
+            d.hostName = Environment.MachineName;
+            d.process = _currentProcess.ProcessName;
+            d.threadName = loggingEvent.ThreadName;
+            d.message = message;
+            d.objectInfo = objInfo;
+            d.exceptionObject = exceptionInfo;
+            d.loggerName = loggingEvent.LoggerName;
+
+            var ndcStack = log4net.ThreadContext.Stacks["NDC"];
+            if (ndcStack != null)
             {
-                level = loggingEvent.Level.DisplayName,
-                timeStamp = loggingEvent.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss.fff zzz"),
-                hostName = Environment.MachineName,
-                process = _currentProcess.ProcessName,
-                threadName = loggingEvent.ThreadName,
-                message = message,
-                objectInfo = objInfo,
-                exceptionObject = exceptionInfo,
-                loggerName=loggingEvent.LoggerName
-            };
+                d.ndcStack = ndcStack.ToString();
+            }
+
+            return d;
 		}
 
         /// <summary>
