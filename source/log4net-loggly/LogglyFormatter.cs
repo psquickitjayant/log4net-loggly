@@ -51,8 +51,10 @@ namespace log4net.loggly
             d.process = _currentProcess.ProcessName;
             d.threadName = loggingEvent.ThreadName;
             d.message = message;
-            d.objectInfo = objInfo;
-            d.exceptionObject = exceptionInfo;
+            if(objInfo != null && !String.IsNullOrWhiteSpace(objInfo as string))
+                d.objectInfo = objInfo;
+            if(exceptionInfo != null && !String.IsNullOrWhiteSpace(exceptionInfo as string))
+                d.exceptionObject = exceptionInfo;
             d.loggerName = loggingEvent.LoggerName;
 
             var ndcStack = log4net.ThreadContext.Stacks["NDC"];
