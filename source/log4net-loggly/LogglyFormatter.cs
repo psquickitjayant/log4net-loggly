@@ -25,36 +25,38 @@ namespace log4net.loggly
             return JsonConvert.SerializeObject(PreParse(loggingEvent)); 
 	    }
 
-		public virtual string ToJson(IEnumerable<LoggingEvent> loggingEvents)
+        public virtual string ToJson(IEnumerable<LoggingEvent> loggingEvents)
 		{
             return JsonConvert.SerializeObject(loggingEvents.Select(PreParse));
 		}
 
-		private object PreParse(LoggingEvent loggingEvent)
+        private object PreParse(LoggingEvent loggingEvent)
 		{
             //NOTE: 
             //1. Empty objects are sent as string.Empty because empty objects are not indexed in the Loggly so they won't show up in the json messages
             //2. null fields are shown as "none" in the Loggly
 
             //managing exceptions
-            object exceptionInfo = getExceptionInfo(loggingEvent);
+            object _exceptionInfo = getExceptionInfo(loggingEvent);
             
             //managing messages and custom objects
-            object objInfo = string.Empty;
-            string message = getMessageAndObjectInfo(loggingEvent, out objInfo);
+            object _objInfo = string.Empty;
+            string _message = getMessageAndObjectInfo(loggingEvent, out _objInfo);
             
-			return new
+            dynamic _loggingInfo = new
             {
                 level = loggingEvent.Level.DisplayName,
                 timeStamp = loggingEvent.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss.fff zzz"),
                 hostName = Environment.MachineName,
                 process = _currentProcess.ProcessName,
-                threadName = loggingEvent.ThreadName,
-                message = message,
-                objectInfo = objInfo,
-                exceptionObject = exceptionInfo,
+                threadName = loggingEvent.Properties["LoggingThread"] ?? loggingEvent.ThreadName,
+                message = _message,
+                objectInfo = _objInfo,
+                exceptionObject = _exceptionInfo,
                 loggerName=loggingEvent.LoggerName
             };
+
+            return _loggingInfo;
 		}
 
         /// <summary>
@@ -66,11 +68,11 @@ namespace log4net.loggly
         private object getExceptionInfo(LoggingEvent loggingEvent)
         {
             //managing exceptions
-            object exceptionInfo = string.Empty;
+            dynamic exceptionInfo = string.Empty;
             if (loggingEvent.ExceptionObject != null)
             {
                 //if there is not any inner exception, then it must be shown as "None" in the loggly 
-                object innerException = null;
+                dynamic innerException = null;
 
                 //most of the times .net exceptions contain important messages in the inner exceptions
                 if (loggingEvent.ExceptionObject.InnerException != null)
@@ -117,6 +119,5 @@ namespace log4net.loggly
             }
             return message;
         }
-
-	}
+    }
 }
