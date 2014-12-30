@@ -45,8 +45,8 @@ namespace log4net.loggly
             
             dynamic _loggingInfo = new
             {
+                timestamp = loggingEvent.TimeStamp.ToString(@"yyyy-MM-ddTHH\:mm\:ss.fffzzz"),
                 level = loggingEvent.Level.DisplayName,
-                timeStamp = loggingEvent.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss.fff zzz"),
                 hostName = Environment.MachineName,
                 process = _currentProcess.ProcessName,
                 threadName = loggingEvent.Properties["LoggingThread"] ?? loggingEvent.ThreadName,
