@@ -108,7 +108,8 @@ namespace log4net.loggly
             
             if (loggingEvent.MessageObject.GetType() == typeof(string)
                 //if it is sent by using InfoFormat method then treat it as a string message
-                || loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat")
+                || loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat"
+                || loggingEvent.MessageObject.GetType().FullName.Contains("StringFormatFormattedMessage"))
             {
                 message = loggingEvent.MessageObject.ToString();
                 objInfo = string.Empty;
