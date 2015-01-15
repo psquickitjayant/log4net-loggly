@@ -104,8 +104,20 @@ namespace log4net.loggly
         /// <returns></returns>
         private string getMessageAndObjectInfo(LoggingEvent loggingEvent, out object objInfo)
         {
-            objInfo = loggingEvent.MessageObject;
-	        return loggingEvent.RenderedMessage;
+            string message = string.Empty;
+            
+            if (loggingEvent.MessageObject.GetType() == typeof(string)
+                //if it is sent by using InfoFormat method then treat it as a string message
+                || loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat")
+            {
+                message = loggingEvent.MessageObject.ToString();
+                objInfo = string.Empty;
+            }
+            else
+            {
+                objInfo = loggingEvent.MessageObject;
+            }
+            return message;
         }
     }
 }
