@@ -30,7 +30,7 @@ namespace log4net.loggly
         private void SendLogAction(LoggingEvent loggingEvent)
         {
             Formatter.AppendAdditionalLoggingInformation(Config, loggingEvent);
-            Client.Send(Config, Config.InputKey, Config.UserAgent, Config.Tag, Formatter.ToJson(loggingEvent));
+            Client.Send(Config, Formatter.ToJson(loggingEvent));
         }
 
 	}

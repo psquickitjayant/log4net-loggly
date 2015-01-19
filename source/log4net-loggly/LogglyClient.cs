@@ -6,17 +6,17 @@ namespace log4net.loggly
 {
 	public class LogglyClient : ILogglyClient
 	{
-		public virtual void Send(ILogglyAppenderConfig config, string inputKey,string userAgent, string tag, string message)
+		public virtual void Send(ILogglyAppenderConfig config, string message)
 		{
             int maxRetryAllowed = 5;
             int totalRetries = 0;
 
-            string _tag = string.IsNullOrWhiteSpace(tag) ? config.Tag : tag;
+            string _tag = config.Tag;
             
             //keeping userAgent backward compatible
-            if (!string.IsNullOrWhiteSpace(userAgent))
+            if (!string.IsNullOrWhiteSpace(config.UserAgent))
             {
-                _tag = _tag + "," + userAgent;
+                _tag = _tag + "," + config.UserAgent;
             }
 
             while (totalRetries < maxRetryAllowed)

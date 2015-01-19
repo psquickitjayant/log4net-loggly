@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using log4net.Core;
 using Newtonsoft.Json;
+using System.Dynamic;
 
 namespace log4net.loggly
 {
@@ -30,68 +31,71 @@ namespace log4net.loggly
             return JsonConvert.SerializeObject(loggingEvents.Select(PreParse));
 		}
 
+        /// <summary>
+        /// Formats the log event to various JSON fields that are to be shown in Loggly.
+        /// </summary>
+        /// <param name="loggingEvent"></param>
+        /// <returns></returns>
         private object PreParse(LoggingEvent loggingEvent)
 		{
-            //NOTE: 
-            //1. Empty objects are sent as string.Empty because empty objects are not indexed in the Loggly so they won't show up in the json messages
-            //2. null fields are shown as "none" in the Loggly
+            //formating base logging info
+            dynamic _loggingInfo = new ExpandoObject();
+            _loggingInfo.timestamp = loggingEvent.TimeStamp.ToString(@"yyyy-MM-ddTHH\:mm\:ss.fffzzz");
+            _loggingInfo.level = loggingEvent.Level.DisplayName;
+            _loggingInfo.hostName = Environment.MachineName;
+            _loggingInfo.process = _currentProcess.ProcessName;
+            _loggingInfo.threadName = loggingEvent.Properties["LoggingThread"] ?? loggingEvent.ThreadName;
+            _loggingInfo.loggerName = loggingEvent.LoggerName;
 
-            //managing exceptions
-            object _exceptionInfo = getExceptionInfo(loggingEvent);
-            
-            //managing messages and custom objects
-            object _objInfo = string.Empty;
+            //handling messages
+            object _objInfo = null;
             string _message = getMessageAndObjectInfo(loggingEvent, out _objInfo);
-            
-            dynamic _loggingInfo = new
+
+            if (_message != string.Empty)
             {
-                timestamp = loggingEvent.TimeStamp.ToString(@"yyyy-MM-ddTHH\:mm\:ss.fffzzz"),
-                level = loggingEvent.Level.DisplayName,
-                hostName = Environment.MachineName,
-                process = _currentProcess.ProcessName,
-                threadName = loggingEvent.Properties["LoggingThread"] ?? loggingEvent.ThreadName,
-                message = _message,
-                objectInfo = _objInfo,
-                exceptionObject = _exceptionInfo,
-                loggerName=loggingEvent.LoggerName
-            };
+                _loggingInfo.message = _message;
+            }
+
+            if (_objInfo != null)
+            {
+                _loggingInfo.objectInfo = _objInfo;
+            }
+            
+            //handling exceptions
+            dynamic _exceptionInfo = getExceptionInfo(loggingEvent);
+            if (_exceptionInfo != null)
+            {
+                _loggingInfo.exceptionObject = _exceptionInfo;
+            }
 
             return _loggingInfo;
 		}
 
         /// <summary>
         /// Returns the exception information. Also takes care of the InnerException.  
-        /// If it is null then returns string.Empty
         /// </summary>
         /// <param name="loggingEvent"></param>
         /// <returns></returns>
         private object getExceptionInfo(LoggingEvent loggingEvent)
         {
-            //managing exceptions
-            dynamic exceptionInfo = string.Empty;
-            if (loggingEvent.ExceptionObject != null)
+            if (loggingEvent.ExceptionObject == null)
+                return null;
+
+            dynamic exceptionInfo = new ExpandoObject();
+            exceptionInfo.exceptionType = loggingEvent.ExceptionObject.GetType().FullName;
+            exceptionInfo.exceptionMessage = loggingEvent.ExceptionObject.Message;
+            exceptionInfo.stacktrace = loggingEvent.ExceptionObject.StackTrace;
+
+            //most of the times dotnet exceptions contain important messages in the inner exceptions
+            if (loggingEvent.ExceptionObject.InnerException != null)
             {
-                //if there is not any inner exception, then it must be shown as "None" in the loggly 
-                dynamic innerException = null;
-
-                //most of the times .net exceptions contain important messages in the inner exceptions
-                if (loggingEvent.ExceptionObject.InnerException != null)
+                dynamic innerException = new
                 {
-                    innerException = new
-                    {
-                        innerExceptionType = loggingEvent.ExceptionObject.InnerException.GetType().FullName,
-                        innerExceptionMessage = loggingEvent.ExceptionObject.InnerException.Message,
-                        innerStacktrace = loggingEvent.ExceptionObject.InnerException.StackTrace,
-                    };
-                }
-
-                exceptionInfo = new
-                {
-                    exceptionType = loggingEvent.ExceptionObject.GetType().FullName,
-                    exceptionMessage = loggingEvent.ExceptionObject.Message,
-                    stacktrace = loggingEvent.ExceptionObject.StackTrace,
-                    innerExceptionInfo = innerException
+                    innerExceptionType = loggingEvent.ExceptionObject.InnerException.GetType().FullName,
+                    innerExceptionMessage = loggingEvent.ExceptionObject.InnerException.Message,
+                    innerStacktrace = loggingEvent.ExceptionObject.InnerException.StackTrace
                 };
+                exceptionInfo.innerException = innerException;
             }
             return exceptionInfo;
         }
@@ -105,14 +109,14 @@ namespace log4net.loggly
         private string getMessageAndObjectInfo(LoggingEvent loggingEvent, out object objInfo)
         {
             string message = string.Empty;
-            
+
             if (loggingEvent.MessageObject.GetType() == typeof(string)
                 //if it is sent by using InfoFormat method then treat it as a string message
                 || loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat"
                 || loggingEvent.MessageObject.GetType().FullName.Contains("StringFormatFormattedMessage"))
             {
                 message = loggingEvent.MessageObject.ToString();
-                objInfo = string.Empty;
+                objInfo = null;
             }
             else
             {
