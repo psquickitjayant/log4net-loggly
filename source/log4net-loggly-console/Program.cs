@@ -15,29 +15,22 @@ namespace log4net_loggly_console
             Thread thread = Thread.CurrentThread;
             thread.Name = "Main Thread";
             log.Info("Thread test");
-            Console.WriteLine("thread name");
-
             log.Error("oops", new ArgumentOutOfRangeException("argArray"));
-            Console.WriteLine("oops");
-            
             log.Warn("hmmm", new ApplicationException("app exception"));
-            Console.WriteLine("app exception");
-            
             log.Info("yawn");
-            Console.WriteLine("yawn");
-            
-            log.Debug("zzzz");
-            Console.WriteLine("zzzz");
-            
-            log.InfoFormat("Loggly is the best {0} to collect Logs.", "service");
-            Console.WriteLine("Loggly is the best {0} to collect Logs");
-            
-            log.Info(new { type = "newcustomtype", value = "newcustomvalue"});
-            Console.WriteLine("customtYpe");
-            
+
+            using (log4net.ThreadContext.Stacks["NDC"].Push("STACKVALUE1"))
+            {
+                log.Debug("zzzz");
+                using (log4net.ThreadContext.Stacks["NDC"].Push("STACKVALUE2"))
+                {
+                    log.Info(new { type = "newcustomtype", value = "newcustomvalue" });
+                    log.Info("StackValue2 message");
+                }
+                log.InfoFormat("Loggly is the best {0} to collect Logs.", "service");
+            }
+
             log.Info(new TestObject());
-            Console.WriteLine("test object");
-            
             Console.ReadKey();
         }
 	}
