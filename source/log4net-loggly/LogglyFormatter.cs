@@ -68,24 +68,10 @@ namespace log4net.loggly
                 _loggingInfo.exceptionObject = _exceptionInfo;
             }
 
-            var ndcStack = log4net.ThreadContext.Stacks["NDC"];
-            if (ndcStack != null && ndcStack.Count > 0)
+            if (loggingEvent.Properties["NDC"] != null)
             {
-                string[] ndcStackArray = new string[ndcStack.Count];
-                for (int n = ndcStack.Count - 1; n >= 0; n--)
-                {
-                    ndcStackArray[n] = ndcStack.Pop();
-                }
-                
-                //TODO: we should find other way to get the elements of the stack
-                //as pushing back is not a good option
-                foreach (string stackValue in ndcStackArray)
-                {
-                    ndcStack.Push(stackValue);
-                }
-                _loggingInfo.ndcStack = ndcStackArray;
+                _loggingInfo.ndcStack = loggingEvent.Properties["NDC"];
             }
-            
             return _loggingInfo;
 		}
 
@@ -127,6 +113,7 @@ namespace log4net.loggly
         private string getMessageAndObjectInfo(LoggingEvent loggingEvent, out object objInfo)
         {
             string message = string.Empty;
+            objInfo = null;
 
             if (loggingEvent.MessageObject.GetType() == typeof(string)
                 //if it is sent by using InfoFormat method then treat it as a string message
@@ -134,7 +121,6 @@ namespace log4net.loggly
                 || loggingEvent.MessageObject.GetType().FullName.Contains("StringFormatFormattedMessage"))
             {
                 message = loggingEvent.MessageObject.ToString();
-                objInfo = null;
             }
             else
             {

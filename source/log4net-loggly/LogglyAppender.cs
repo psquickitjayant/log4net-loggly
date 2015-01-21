@@ -24,6 +24,15 @@ namespace log4net.loggly
         protected override void Append(LoggingEvent loggingEvent)
         {
             loggingEvent.Properties["LoggingThread"] = Thread.CurrentThread.Name;
+
+            //adding ndc stack value to the logging event properties as 
+            //we are going to create a new thread to log the message
+            
+            var ndcStack = log4net.ThreadContext.Stacks["NDC"];
+            if (ndcStack != null && ndcStack.Count > 0)
+            {
+                loggingEvent.Properties["NDC"] = ndcStack.ToString();
+            }
             ThreadPool.QueueUserWorkItem(x => SendLogAction(loggingEvent));
         }
 
