@@ -14,27 +14,19 @@ namespace log4net_loggly_console
 
             Thread thread = Thread.CurrentThread;
             thread.Name = "Main Thread";
+            ThreadContext.Properties["MainThreadContext"] = "MainThreadContextValue";
             log.Info("Thread test");
             log.Error("oops", new ArgumentOutOfRangeException("argArray"));
             log.Warn("hmmm", new ApplicationException("app exception"));
             log.Info("yawn");
+            
 
             Thread newThread1 = new Thread(() =>
             {
                 Thread curntThread = Thread.CurrentThread;
-                curntThread.Name = "Inner thread";
-                log.Info("this is an inner thread");
-
-                using (ThreadContext.Stacks["NDC"].Push("stacktestkey1"))
-                {
-                    log.Info("new stack test key 1");
-                    log.Info("new stack1 test key 2");
-                }
-                
-                using (ThreadContext.Stacks["NDC"].Push("stacktestkey2"))
-                {
-                    log.Info("new stack test key 2");
-                }
+                curntThread.Name = "Inner thread 1";
+                ThreadContext.Properties["InnerThread1Context"] = "InnerThreadContext1Values";
+                log.Info("this is an inner thread 1");
             });
 
             newThread1.Start();
@@ -43,35 +35,15 @@ namespace log4net_loggly_console
             {
                 Thread curntThread = Thread.CurrentThread;
                 curntThread.Name = "Inner thread 2";
-
+                ThreadContext.Properties["InnerThread2Context"] = "InnerThreadContext2Values";
                 log.Info("this is an inner thread 2");
-
-                using (ThreadContext.Stacks["NDC"].Push("stacktestkey3"))
-                {
-                    log.Info("new stack test key 3");
-                    log.Info("new stack2 test key 3");
-                }
-
-                using (ThreadContext.Stacks["NDC"].Push("stacktestkey4"))
-                {
-                    log.Info("new stack test key 4");
-                }
             });
 
             newThread2.Start();
 
-            using (log4net.ThreadContext.Stacks["NDC"].Push("STACKVALUE1"))
-            {
-                log.Debug("zzzz");
-                log.InfoFormat("Loggly is the best {0} to collect Logs.", "service");
-            }
-
-            using (log4net.ThreadContext.Stacks["NDC"].Push("STACKVALUE2"))
-            {
-                log.Info(new { type = "newcustomtype", value = "newcustomvalue" });
-                log.Info("StackValue2 message");
-            }
-            
+            log.Debug("zzzz");
+            log.InfoFormat("Loggly is the best {0} to collect Logs.", "service");
+            log.Info(new { type = "newcustomtype", value = "newcustomvalue" });
             log.Info(new TestObject());
             Console.ReadKey();
         }

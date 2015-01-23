@@ -2,6 +2,7 @@
 using log4net.Core;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 
 namespace log4net.loggly
@@ -25,13 +26,15 @@ namespace log4net.loggly
         {
             loggingEvent.Properties["LoggingThread"] = Thread.CurrentThread.Name;
 
-            //adding ndc stack value to the logging event properties as 
+            //adding ThreadContextProperties value to the logging event properties as 
             //we are going to create a new thread to log the message
-            
-            var ndcStack = log4net.ThreadContext.Stacks["NDC"];
-            if (ndcStack != null && ndcStack.Count > 0)
+            //so current ThreadContextProperties will not be present there.
+            if (ThreadContext.Properties.GetKeys().Length > 0)
             {
-                loggingEvent.Properties["NDC"] = ndcStack.ToString();
+                foreach (string key in ThreadContext.Properties.GetKeys())
+                {
+                    loggingEvent.Properties[key] = ThreadContext.Properties[key];
+                }
             }
             ThreadPool.QueueUserWorkItem(x => SendLogAction(loggingEvent));
         }

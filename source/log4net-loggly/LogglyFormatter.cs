@@ -68,10 +68,22 @@ namespace log4net.loggly
                 _loggingInfo.exceptionObject = _exceptionInfo;
             }
 
-            if (loggingEvent.Properties["NDC"] != null)
+
+            //removing "LoggingThread" property as we will be checking for
+            //ThreadStackProperties and do not need this one.
+            loggingEvent.Properties.Remove("LoggingThread");
+
+            if (loggingEvent.Properties.Count > 0)
             {
-                _loggingInfo.ndcStack = loggingEvent.Properties["NDC"];
+                var p = _loggingInfo as IDictionary<string, object>;
+                foreach (string key in loggingEvent.Properties.GetKeys())
+                {
+                    //adding all the ThreadContent Properties
+                    //as key value to the parent object
+                    p[key] = loggingEvent.Properties[key];
+                }
             }
+
             return _loggingInfo;
 		}
 
