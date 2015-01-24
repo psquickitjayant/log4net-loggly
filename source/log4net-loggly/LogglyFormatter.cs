@@ -44,7 +44,7 @@ namespace log4net.loggly
             _loggingInfo.level = loggingEvent.Level.DisplayName;
             _loggingInfo.hostName = Environment.MachineName;
             _loggingInfo.process = _currentProcess.ProcessName;
-            _loggingInfo.threadName = loggingEvent.Properties["LoggingThread"] ?? loggingEvent.ThreadName;
+            _loggingInfo.threadName = loggingEvent.ThreadName;
             _loggingInfo.loggerName = loggingEvent.LoggerName;
 
             //handling messages
@@ -68,22 +68,15 @@ namespace log4net.loggly
                 _loggingInfo.exceptionObject = _exceptionInfo;
             }
 
-
-            //removing "LoggingThread" property as we will be checking for
-            //ThreadStackProperties and do not need this one.
-            loggingEvent.Properties.Remove("LoggingThread");
-
-            if (loggingEvent.Properties.Count > 0)
+            string[] _threadContextProperties = ThreadContext.Properties.GetKeys();
+            if (_threadContextProperties.Count() > 0)
             {
                 var p = _loggingInfo as IDictionary<string, object>;
-                foreach (string key in loggingEvent.Properties.GetKeys())
+                foreach (string key in _threadContextProperties)
                 {
-                    //adding all the ThreadContent Properties
-                    //as key value to the parent object
-                    p[key] = loggingEvent.Properties[key];
+                    p[key] = ThreadContext.Properties[key];
                 }
             }
-
             return _loggingInfo;
 		}
 
