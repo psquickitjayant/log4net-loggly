@@ -26,83 +26,92 @@ namespace log4net.loggly
             return JsonConvert.SerializeObject(PreParse(loggingEvent)); 
 	    }
 
-		public virtual string ToJson(IEnumerable<LoggingEvent> loggingEvents)
+        public virtual string ToJson(IEnumerable<LoggingEvent> loggingEvents)
 		{
             return JsonConvert.SerializeObject(loggingEvents.Select(PreParse));
 		}
 
-		private object PreParse(LoggingEvent loggingEvent)
+        /// <summary>
+        /// Formats the log event to various JSON fields that are to be shown in Loggly.
+        /// </summary>
+        /// <param name="loggingEvent"></param>
+        /// <returns></returns>
+        private object PreParse(LoggingEvent loggingEvent)
 		{
-            //NOTE: 
-            //1. Empty objects are sent as string.Empty because empty objects are not indexed in the Loggly so they won't show up in the json messages
-            //2. null fields are shown as "none" in the Loggly
+            //formating base logging info
+            dynamic _loggingInfo = new ExpandoObject();
+            _loggingInfo.timestamp = loggingEvent.TimeStamp.ToString(@"yyyy-MM-ddTHH\:mm\:ss.fffzzz");
+            _loggingInfo.level = loggingEvent.Level.DisplayName;
+            _loggingInfo.hostName = Environment.MachineName;
+            _loggingInfo.process = _currentProcess.ProcessName;
+            _loggingInfo.threadName = loggingEvent.Properties["LoggingThread"] ?? loggingEvent.ThreadName;
+            _loggingInfo.loggerName = loggingEvent.LoggerName;
 
-            //managing exceptions
-            object exceptionInfo = getExceptionInfo(loggingEvent);
-            
-            //managing messages and custom objects
-            object objInfo = string.Empty;
-            string message = getMessageAndObjectInfo(loggingEvent, out objInfo);
+            //handling messages
+            object _objInfo = null;
+            string _message = getMessageAndObjectInfo(loggingEvent, out _objInfo);
 
-            var d = (dynamic)new ExpandoObject();
-            d.level = loggingEvent.Level.DisplayName;
-            d.timeStamp = loggingEvent.TimeStamp.ToString("yyyy-MM-dd HH:mm:ss.fff zzz");
-            d.hostName = Environment.MachineName;
-            d.process = _currentProcess.ProcessName;
-            d.threadName = loggingEvent.ThreadName;
-            d.message = message;
-            if(objInfo != null && !String.IsNullOrWhiteSpace(objInfo as string))
-                d.objectInfo = objInfo;
-            if(exceptionInfo != null && !String.IsNullOrWhiteSpace(exceptionInfo as string))
-                d.exceptionObject = exceptionInfo;
-            d.loggerName = loggingEvent.LoggerName;
-
-            var ndcStack = log4net.ThreadContext.Stacks["NDC"];
-            if (ndcStack != null)
+            if (_message != string.Empty)
             {
-                var stackText = ndcStack.ToString();
-                if (stackText != null)
+                _loggingInfo.message = _message;
+            }
+
+            if (_objInfo != null)
+            {
+                _loggingInfo.objectInfo = _objInfo;
+            }
+            
+            //handling exceptions
+            dynamic _exceptionInfo = getExceptionInfo(loggingEvent);
+            if (_exceptionInfo != null)
+            {
+                _loggingInfo.exceptionObject = _exceptionInfo;
+            }
+
+
+            //removing "LoggingThread" property as we will be checking for
+            //ThreadStackProperties and do not need this one.
+            loggingEvent.Properties.Remove("LoggingThread");
+
+            if (loggingEvent.Properties.Count > 0)
+            {
+                var p = _loggingInfo as IDictionary<string, object>;
+                foreach (string key in loggingEvent.Properties.GetKeys())
                 {
-                    d.ndcStack = stackText;
+                    //adding all the ThreadContent Properties
+                    //as key value to the parent object
+                    p[key] = loggingEvent.Properties[key];
                 }
             }
 
-            return d;
+            return _loggingInfo;
 		}
 
         /// <summary>
         /// Returns the exception information. Also takes care of the InnerException.  
-        /// If it is null then returns string.Empty
         /// </summary>
         /// <param name="loggingEvent"></param>
         /// <returns></returns>
         private object getExceptionInfo(LoggingEvent loggingEvent)
         {
-            //managing exceptions
-            object exceptionInfo = string.Empty;
-            if (loggingEvent.ExceptionObject != null)
+            if (loggingEvent.ExceptionObject == null)
+                return null;
+
+            dynamic exceptionInfo = new ExpandoObject();
+            exceptionInfo.exceptionType = loggingEvent.ExceptionObject.GetType().FullName;
+            exceptionInfo.exceptionMessage = loggingEvent.ExceptionObject.Message;
+            exceptionInfo.stacktrace = loggingEvent.ExceptionObject.StackTrace;
+
+            //most of the times dotnet exceptions contain important messages in the inner exceptions
+            if (loggingEvent.ExceptionObject.InnerException != null)
             {
-                //if there is not any inner exception, then it must be shown as "None" in the loggly 
-                object innerException = null;
-
-                //most of the times .net exceptions contain important messages in the inner exceptions
-                if (loggingEvent.ExceptionObject.InnerException != null)
+                dynamic innerException = new
                 {
-                    innerException = new
-                    {
-                        innerExceptionType = loggingEvent.ExceptionObject.InnerException.GetType().FullName,
-                        innerExceptionMessage = loggingEvent.ExceptionObject.InnerException.Message,
-                        innerStacktrace = loggingEvent.ExceptionObject.InnerException.StackTrace,
-                    };
-                }
-
-                exceptionInfo = new
-                {
-                    exceptionType = loggingEvent.ExceptionObject.GetType().FullName,
-                    exceptionMessage = loggingEvent.ExceptionObject.Message,
-                    stacktrace = loggingEvent.ExceptionObject.StackTrace,
-                    innerExceptionInfo = innerException
+                    innerExceptionType = loggingEvent.ExceptionObject.InnerException.GetType().FullName,
+                    innerExceptionMessage = loggingEvent.ExceptionObject.InnerException.Message,
+                    innerStacktrace = loggingEvent.ExceptionObject.InnerException.StackTrace
                 };
+                exceptionInfo.innerException = innerException;
             }
             return exceptionInfo;
         }
@@ -116,13 +125,14 @@ namespace log4net.loggly
         private string getMessageAndObjectInfo(LoggingEvent loggingEvent, out object objInfo)
         {
             string message = string.Empty;
-            
+            objInfo = null;
+
             if (loggingEvent.MessageObject.GetType() == typeof(string)
                 //if it is sent by using InfoFormat method then treat it as a string message
-                || loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat")
+                || loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat"
+                || loggingEvent.MessageObject.GetType().FullName.Contains("StringFormatFormattedMessage"))
             {
                 message = loggingEvent.MessageObject.ToString();
-                objInfo = string.Empty;
             }
             else
             {
@@ -130,6 +140,5 @@ namespace log4net.loggly
             }
             return message;
         }
-
-	}
+    }
 }

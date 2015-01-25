@@ -6,48 +6,40 @@ namespace log4net.loggly
 {
 	public class LogglyClient : ILogglyClient
 	{
-		public virtual void Send(ILogglyAppenderConfig config, string inputKey,string userAgent, string tag, string message)
+		public virtual void Send(ILogglyAppenderConfig config, string message)
 		{
-            string _tag = string.IsNullOrWhiteSpace(tag) ? config.Tag : tag;
+            int maxRetryAllowed = 5;
+            int totalRetries = 0;
+
+            string _tag = config.Tag;
             
             //keeping userAgent backward compatible
-            if (!string.IsNullOrWhiteSpace(userAgent))
+            if (!string.IsNullOrWhiteSpace(config.UserAgent))
             {
-                _tag = _tag + "," + userAgent;
+                _tag = _tag + "," + config.UserAgent;
             }
 
-			var bytes = Encoding.UTF8.GetBytes(message);
-    			var request = CreateWebRequest(config, _tag);
-			
-            using (var dataStream = request.GetRequestStream())
-			{
-				dataStream.Write(bytes, 0, bytes.Length);
-				dataStream.Flush();
-				dataStream.Close();
-			}
-
-            //creating an action for async call
-            Action wrapperAction = () =>
+            while (totalRetries < maxRetryAllowed)
             {
-                //sending aysnc request 
-                request.BeginGetResponse((result) =>
+                totalRetries++;
+                try
                 {
-                    try
-                    {
-                        var response = (result.AsyncState as HttpWebRequest).EndGetResponse(result);
-                        response.Close();
-                    }
-                    catch { }
+			        var bytes = Encoding.UTF8.GetBytes(message);
+                    var webRequest = CreateWebRequest(config, _tag);
 
-                }, request);
-            };
-
-            wrapperAction.BeginInvoke(new AsyncCallback((result) =>
-            {
-                var action = result.AsyncState as Action;
-                action.EndInvoke(result);
-
-            }), wrapperAction);
+                    using (var dataStream = webRequest.GetRequestStream())
+			        {
+				        dataStream.Write(bytes, 0, bytes.Length);
+				        dataStream.Flush();
+				        dataStream.Close();
+			        }
+            
+                    var webResponse = webRequest.GetResponse();
+                    webResponse.Close();
+                    break;
+                }
+                catch { }
+            }
 		}
 
 		protected virtual HttpWebRequest CreateWebRequest(ILogglyAppenderConfig config, string tag)
@@ -61,30 +53,7 @@ namespace log4net.loggly
 			request.UserAgent = config.UserAgent;
 			request.KeepAlive = true;
 			request.ContentType = "application/json";
-
-            //adding x-forwarded-for header
-            request.Headers.Add("x-forwarded-for", GetIPAddressOfMachine());
-
 			return request;
 		}
-
-        /// <summary>
-        /// Returns the IP Address of the Client
-        /// </summary>
-        /// <returns>IP Address</returns>
-        private string GetIPAddressOfMachine()
-        {
-            var addressess = Dns.GetHostAddresses(Environment.MachineName);
-            foreach (var addrs in addressess)
-            {
-                if (addrs.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-                {
-                    return addrs.ToString();
-                }
-            }
-
-            //If no IP Address is found then return machine name
-            return Environment.MachineName;
-        }
 	}
 }
