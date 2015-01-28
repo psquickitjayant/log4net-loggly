@@ -20,4 +20,17 @@ namespace log4net_loggly_console
             TestObjectField4 = null;
         }
     }
+	//test self referencing
+	class Person
+	{
+		public string Name;
+		public Person Parent;
+		public List<Person> Children;
+	}
+
+	class Child : Person
+	{
+		public string Name;
+
+	}
 }
