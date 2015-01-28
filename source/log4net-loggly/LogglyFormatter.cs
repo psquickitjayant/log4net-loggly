@@ -49,7 +49,7 @@ namespace log4net.loggly
 
             //handling messages
             object _objInfo = null;
-            string _message = getMessageAndObjectInfo(loggingEvent, out _objInfo);
+            string _message = GetMessageAndObjectInfo(loggingEvent, out _objInfo);
 
             if (_message != string.Empty)
             {
@@ -62,21 +62,37 @@ namespace log4net.loggly
             }
             
             //handling exceptions
-            dynamic _exceptionInfo = getExceptionInfo(loggingEvent);
+            dynamic _exceptionInfo = GetExceptionInfo(loggingEvent);
             if (_exceptionInfo != null)
             {
                 _loggingInfo.exceptionObject = _exceptionInfo;
             }
 
+            //handling threadcontext properties
             string[] _threadContextProperties = ThreadContext.Properties.GetKeys();
             if (_threadContextProperties.Count() > 0)
             {
                 var p = _loggingInfo as IDictionary<string, object>;
                 foreach (string key in _threadContextProperties)
                 {
-                    p[key] = ThreadContext.Properties[key];
+                    //handling threadstack
+                    if (ThreadContext.Properties[key].GetType() ==
+                        typeof(log4net.Util.ThreadContextStack))
+                    {
+                        string[] stackArray;
+                        if (IncludeThreadStackValues(ThreadContext.Properties[key]
+                            as log4net.Util.ThreadContextStack, out stackArray))
+                        {
+                            p[key] = stackArray;
+                        }
+                    }
+                    else
+                    {
+                        p[key] = ThreadContext.Properties[key];
+                    }
                 }
             }
+
             return _loggingInfo;
 		}
 
@@ -85,7 +101,7 @@ namespace log4net.loggly
         /// </summary>
         /// <param name="loggingEvent"></param>
         /// <returns></returns>
-        private object getExceptionInfo(LoggingEvent loggingEvent)
+        private object GetExceptionInfo(LoggingEvent loggingEvent)
         {
             if (loggingEvent.ExceptionObject == null)
                 return null;
@@ -115,7 +131,7 @@ namespace log4net.loggly
         /// </summary>
         /// <param name="loggingEvent"></param>
         /// <returns></returns>
-        private string getMessageAndObjectInfo(LoggingEvent loggingEvent, out object objInfo)
+        private string GetMessageAndObjectInfo(LoggingEvent loggingEvent, out object objInfo)
         {
             string message = string.Empty;
             objInfo = null;
@@ -132,6 +148,37 @@ namespace log4net.loggly
                 objInfo = loggingEvent.MessageObject;
             }
             return message;
+        }
+
+        /// <summary>
+        /// Returns whether to include stack array or not
+        /// Also outs the stack array if needed to include
+        /// </summary>
+        /// <param name="stack"></param>
+        /// <param name="includeStackKey"></param>
+        /// <returns></returns>
+        private bool IncludeThreadStackValues(log4net.Util.ThreadContextStack stack,
+            out string[] stackArray)
+        {
+            if (stack != null && stack.Count > 0)
+            {
+                stackArray = new string[stack.Count];
+                for (int n = stack.Count - 1; n >= 0; n--)
+                {
+                    stackArray[n] = stack.Pop();
+                }
+
+                foreach (string stackValue in stackArray)
+                {
+                    stack.Push(stackValue);
+                }
+                return true;
+            }
+            else
+            {
+                stackArray = null;
+                return false;
+            }
         }
     }
 }

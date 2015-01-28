@@ -30,6 +30,10 @@ namespace log4net.loggly
         private void SendLogAction(LoggingEvent loggingEvent)
         {
             Formatter.AppendAdditionalLoggingInformation(Config, loggingEvent);
+
+            //we should always format event in the same thread as 
+            //many properties used in the event are associated with the current thread
+            //like threadname, ndc stacks, threadcontent properties etc.
             string _formattedLog = Formatter.ToJson(loggingEvent);
             ThreadPool.QueueUserWorkItem(x => Client.Send(Config, _formattedLog));
         }
