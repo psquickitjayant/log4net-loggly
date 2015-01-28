@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using log4net;
 
@@ -40,6 +41,12 @@ namespace log4net_loggly_console
             });
 
             newThread2.Start();
+			//Test self referencing
+			var parent = new Person { Name = "John Smith" };
+			var child1 = new Person { Name = "Bob Smith", Parent = parent };
+			var child2 = new Person { Name = "Suzy Smith", Parent = parent };
+			parent.Children = new List<Person> { child1, child2 };
+			log.Info(parent);
 
             log.Debug("zzzz");
             log.InfoFormat("Loggly is the best {0} to collect Logs.", "service");

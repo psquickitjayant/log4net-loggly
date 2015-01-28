@@ -23,12 +23,12 @@ namespace log4net.loggly
 
 	    public virtual string ToJson(LoggingEvent loggingEvent)
 	    {
-            return JsonConvert.SerializeObject(PreParse(loggingEvent)); 
+            return JsonConvert.SerializeObject(PreParse(loggingEvent), new JsonSerializerSettings(){PreserveReferencesHandling = PreserveReferencesHandling.Objects}); 
 	    }
 
         public virtual string ToJson(IEnumerable<LoggingEvent> loggingEvents)
 		{
-            return JsonConvert.SerializeObject(loggingEvents.Select(PreParse));
+            return JsonConvert.SerializeObject(loggingEvents.Select(PreParse),new JsonSerializerSettings(){PreserveReferencesHandling = PreserveReferencesHandling.Objects});
 		}
 
         /// <summary>
