@@ -62,14 +62,20 @@ namespace log4net.loggly
 
             if (_objInfo != null)
             {
-                _loggingInfo.objectInfo = _objInfo;
+                var p = _loggingInfo as IDictionary<string, object>;
+
+                var _properties = _objInfo.GetType().GetProperties();
+                foreach (var property in _properties)
+                {
+                    p[property.Name] = property.GetValue(_objInfo, null);
+                }
             }
             
             //handling exceptions
             dynamic _exceptionInfo = GetExceptionInfo(loggingEvent);
             if (_exceptionInfo != null)
             {
-                _loggingInfo.exceptionObject = _exceptionInfo;
+                _loggingInfo.exception = _exceptionInfo;
             }
 
             //handling threadcontext properties
