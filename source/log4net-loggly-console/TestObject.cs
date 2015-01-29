@@ -7,17 +7,17 @@ namespace log4net_loggly_console
 {
     class TestObject
     {
-        public string TestField1 { get; set; }
-        public string TestField2 { get; set; }
-        public string TestField3 { get; set; }
-        public object TestObjectField4 { get; set; }
+        public string TField1 { get; set; }
+        public string TField2 { get; set; }
+        public string TField3 { get; set; }
+        public object TOField4 { get; set; }
 
         public TestObject()
         {
-            TestField1 = "testValue1";
-            TestField2 = "testValue2";
-            TestField3 = string.Empty;
-            TestObjectField4 = null;
+            TField1 = "testValue1";
+            TField2 = "testValue2";
+            TField3 = string.Empty;
+            TOField4 = new { TOFF1 = "TOFFValue1", TOFF2 = "TOFFValue2" };
         }
     }
 	//test self referencing
