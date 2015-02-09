@@ -63,6 +63,8 @@ namespace log4net_loggly_console
             log.InfoFormat("Loggly is the best {0} to collect Logs.", "service");
             log.Info(new { type1 = "newcustomtype", value1 = "newcustomvalue" });
             log.Info(new TestObject());
+            log.Info(null);
+
             Console.ReadKey();
         }
 	}

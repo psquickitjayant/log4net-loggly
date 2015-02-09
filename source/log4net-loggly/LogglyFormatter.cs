@@ -146,16 +146,25 @@ namespace log4net.loggly
             string message = string.Empty;
             objInfo = null;
 
-            if (loggingEvent.MessageObject.GetType() == typeof(string)
-                //if it is sent by using InfoFormat method then treat it as a string message
+            if (loggingEvent.MessageObject != null)
+            {
+                if (loggingEvent.MessageObject.GetType() == typeof(string)
+                    //if it is sent by using InfoFormat method then treat it as a string message
                 || loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat"
                 || loggingEvent.MessageObject.GetType().FullName.Contains("StringFormatFormattedMessage"))
-            {
-                message = loggingEvent.MessageObject.ToString();
+                {
+                    message = loggingEvent.MessageObject.ToString();
+                }
+                else
+                {
+                    objInfo = loggingEvent.MessageObject;
+                }
             }
             else
             {
-                objInfo = loggingEvent.MessageObject;
+                //adding message as null so that the Loggly user
+                //can know that a null object is logged.
+                message = "null";
             }
             return message;
         }
