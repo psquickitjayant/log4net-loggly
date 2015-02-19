@@ -80,7 +80,7 @@ namespace log4net.loggly
 
             //handling threadcontext properties
             string[] _threadContextProperties = ThreadContext.Properties.GetKeys();
-            if (_threadContextProperties.Count() > 0)
+            if (_threadContextProperties != null && _threadContextProperties.Any())
             {
                 var p = _loggingInfo as IDictionary<string, object>;
                 foreach (string key in _threadContextProperties)
