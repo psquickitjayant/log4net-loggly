@@ -1,7 +1,7 @@
 log4net-loggly
 ==============
 
-Custom log4net appenders for importing logging events to loggly.
+Custom log4net appenders for importing logging events to loggly. Check out Loggly's [.Net logging documentation](https://www.loggly.com/docs/net-logs/) to learn more.
 
 Download log4net-loggly package from NuGet. Use the following command.
 
