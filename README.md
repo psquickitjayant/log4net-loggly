@@ -24,6 +24,16 @@ Add the following code in your web.config to configure LogglyAppender in your ap
       </appender>
     </log4net>
     
+Add the following entry in your AssemblyInfo.cs
+```
+[assembly: log4net.Config.XmlConfigurator(Watch = true)]
+```
+
+Alternatively, you can add the following code in your Main method or in Global.asax file
+
+```
+log4net.Config.XmlConfigurator.Configure();
+```
 
 Create an object of the Log class using LogManager
 
