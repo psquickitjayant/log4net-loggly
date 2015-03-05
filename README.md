@@ -1,7 +1,7 @@
 log4net-loggly
 ==============
 
-Custom log4net appenders for importing logging events to loggly. Check out Loggly's [.Net logging documentation](https://www.loggly.com/docs/net-logs/) to learn more.
+Custom log4net appenders for importing logging events to loggly. It’s asynchronous and will send logs in the background without blocking your application. Check out Loggly's [.Net logging documentation](https://www.loggly.com/docs/net-logs/) to learn more.
 
 Download log4net-loggly package from NuGet. Use the following command.
 
@@ -40,5 +40,15 @@ Create an object of the Log class using LogManager
     var logger = LogManager.GetLogger(typeof(Class));
     
 Send logs to Loggly using the following code
-  
+
+```  
     logger.Info("log message");
+```
+
+<strong>For Console Application</strong>
+
+You should add the following statement at the end of your Main method as the log4net-loggly library is asynchronous so there needs to be time for the threads the complete logging before the application exits.
+
+```
+Console.ReadKey();
+```
