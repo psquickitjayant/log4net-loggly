@@ -5,6 +5,7 @@ using System.Linq;
 using log4net.Core;
 using Newtonsoft.Json;
 using System.Dynamic;
+using Newtonsoft.Json.Linq;
 
 namespace log4net.loggly
 {
@@ -23,9 +24,7 @@ namespace log4net.loggly
 
 	    public virtual string ToJson(LoggingEvent loggingEvent)
 	    {
-            return JsonConvert.SerializeObject(PreParse(loggingEvent), new JsonSerializerSettings(){
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            }); 
+            return PreParse(loggingEvent);
 	    }
 
         public virtual string ToJson(IEnumerable<LoggingEvent> loggingEvents)
@@ -40,7 +39,7 @@ namespace log4net.loggly
         /// </summary>
         /// <param name="loggingEvent"></param>
         /// <returns></returns>
-        private object PreParse(LoggingEvent loggingEvent)
+        private string PreParse(LoggingEvent loggingEvent)
 		{
             //formating base logging info
             dynamic _loggingInfo = new ExpandoObject();
@@ -52,25 +51,14 @@ namespace log4net.loggly
             _loggingInfo.loggerName = loggingEvent.LoggerName;
 
             //handling messages
-            object _objInfo = null;
-            string _message = GetMessageAndObjectInfo(loggingEvent, out _objInfo);
+            object _loggedObject = null;
+            string _message = GetMessageAndObjectInfo(loggingEvent, out _loggedObject);
 
             if (_message != string.Empty)
             {
                 _loggingInfo.message = _message;
             }
 
-            if (_objInfo != null)
-            {
-                var p = _loggingInfo as IDictionary<string, object>;
-
-                var _properties = _objInfo.GetType().GetProperties();
-                foreach (var property in _properties)
-                {
-                    p[property.Name] = property.GetValue(_objInfo, null);
-                }
-            }
-            
             //handling exceptions
             dynamic _exceptionInfo = GetExceptionInfo(loggingEvent);
             if (_exceptionInfo != null)
@@ -103,7 +91,43 @@ namespace log4net.loggly
                 }
             }
 
-            return _loggingInfo;
+            //converting event info to Json string
+            var _loggingEventJSON = JsonConvert.SerializeObject(_loggingInfo,
+            new JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            });
+
+            //checking if _loggedObject is not null
+            //if it is not null then convert it into JSON string
+            //and concatenate to the _loggingEventJSON
+
+            if (_loggedObject != null)
+            {
+                //converting passed object to JSON string
+
+                var _loggedObjectJSON = JsonConvert.SerializeObject(_loggedObject,
+                new JsonSerializerSettings()
+                {
+                    PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                });
+
+                //concatenating _loggedObjectJSON with _loggingEventJSON
+                //http://james.newtonking.com/archive/2014/08/04/json-net-6-0-release-4-json-merge-dependency-injection
+
+                JObject jEvent = JObject.Parse(_loggingEventJSON);
+                JObject jObject = JObject.Parse(_loggedObjectJSON);
+
+                jEvent.Merge(jObject, new JsonMergeSettings
+                {
+                    MergeArrayHandling = MergeArrayHandling.Union
+                });
+
+                _loggingEventJSON = jEvent.ToString();
+            }
+
+            return _loggingEventJSON;
 		}
 
         /// <summary>
