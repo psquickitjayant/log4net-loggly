@@ -24,6 +24,13 @@ Add the following code in your web.config to configure LogglyAppender in your ap
       </appender>
     </log4net>
     
+
+You can also use **layout** with in the Config to render logs according to your Pattern Layouts
+
+     <layout type="log4net.Layout.PatternLayout">
+         <conversionPattern value="%date [%thread] %-5level %logger %message" />
+     </layout>
+
 Add the following entry in your AssemblyInfo.cs
 ```
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
