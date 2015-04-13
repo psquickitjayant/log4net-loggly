@@ -34,6 +34,11 @@ namespace log4net.loggly
             });
 		}
 
+        public virtual string ToJson(string renderedLog, DateTime timeStamp)
+        {
+            return ParseRenderedLog(renderedLog, timeStamp);
+        }
+
         /// <summary>
         /// Formats the log event to various JSON fields that are to be shown in Loggly.
         /// </summary>
@@ -129,6 +134,24 @@ namespace log4net.loggly
 
             return _loggingEventJSON;
 		}
+
+        /// <summary>
+        /// Merged Rendered log and formatted timestamp in the single Json object
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="timeStamp"></param>
+        /// <returns></returns>
+        private string ParseRenderedLog(string log, DateTime timeStamp)
+        {
+            dynamic _loggingInfo = new ExpandoObject();
+            _loggingInfo.message = log;
+            _loggingInfo.timestamp = timeStamp.ToString(@"yyyy-MM-ddTHH\:mm\:ss.fffzzz");
+
+            //converting event info to Json string
+            var _loggingEventJSON = JsonConvert.SerializeObject(_loggingInfo);
+
+            return _loggingEventJSON;
+        }
 
         /// <summary>
         /// Returns the exception information. Also takes care of the InnerException.  

@@ -24,17 +24,30 @@ namespace log4net.loggly
 
         protected override void Append(LoggingEvent loggingEvent)
         {
-            SendLogAction(loggingEvent);
+            SendLogAction(loggingEvent);  
         }
 
         private void SendLogAction(LoggingEvent loggingEvent)
         {
-            Formatter.AppendAdditionalLoggingInformation(Config, loggingEvent);
-
             //we should always format event in the same thread as 
             //many properties used in the event are associated with the current thread
             //like threadname, ndc stacks, threadcontent properties etc.
-            string _formattedLog = Formatter.ToJson(loggingEvent);
+
+            //initializing a string for the formatted log
+            string _formattedLog = string.Empty;
+            
+            //if Layout is null then format the log from the Loggly Client
+            if (this.Layout == null)
+            {
+                Formatter.AppendAdditionalLoggingInformation(Config, loggingEvent);
+                _formattedLog = Formatter.ToJson(loggingEvent);
+            }
+            else
+            {
+                _formattedLog = Formatter.ToJson(RenderLoggingEvent(loggingEvent), loggingEvent.TimeStamp);
+            }
+            
+            //sending _formattedLog to the async queue
             ThreadPool.QueueUserWorkItem(x => Client.Send(Config, _formattedLog));
         }
 
