@@ -9,30 +9,30 @@ using Newtonsoft.Json.Linq;
 
 namespace log4net.loggly
 {
-	public class LogglyFormatter : ILogglyFormatter
-	{
-		private Process _currentProcess;
+    public class LogglyFormatter : ILogglyFormatter
+    {
+        private Process _currentProcess;
 
-		public LogglyFormatter()
-		{
-			_currentProcess = Process.GetCurrentProcess();
-		}
+        public LogglyFormatter()
+        {
+            _currentProcess = Process.GetCurrentProcess();
+        }
 
-		public virtual void AppendAdditionalLoggingInformation(ILogglyAppenderConfig config, LoggingEvent loggingEvent)
-		{
-		}
+        public virtual void AppendAdditionalLoggingInformation(ILogglyAppenderConfig config, LoggingEvent loggingEvent)
+        {
+        }
 
-	    public virtual string ToJson(LoggingEvent loggingEvent)
-	    {
+        public virtual string ToJson(LoggingEvent loggingEvent)
+        {
             return PreParse(loggingEvent);
-	    }
+        }
 
         public virtual string ToJson(IEnumerable<LoggingEvent> loggingEvents)
-		{
+        {
             return JsonConvert.SerializeObject(loggingEvents.Select(PreParse),new JsonSerializerSettings(){
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
             });
-		}
+        }
 
         public virtual string ToJson(string renderedLog, DateTime timeStamp)
         {
@@ -45,7 +45,7 @@ namespace log4net.loggly
         /// <param name="loggingEvent"></param>
         /// <returns></returns>
         private string PreParse(LoggingEvent loggingEvent)
-		{
+        {
             //formating base logging info
             dynamic _loggingInfo = new ExpandoObject();
             _loggingInfo.timestamp = loggingEvent.TimeStamp.ToString(@"yyyy-MM-ddTHH\:mm\:ss.fffzzz");
@@ -80,11 +80,11 @@ namespace log4net.loggly
                 {
                     //handling threadstack
                     if (ThreadContext.Properties[key].GetType() ==
-                        typeof(log4net.Util.ThreadContextStack))
+                            typeof(log4net.Util.ThreadContextStack))
                     {
                         string[] stackArray;
                         if (IncludeThreadStackValues(ThreadContext.Properties[key]
-                            as log4net.Util.ThreadContextStack, out stackArray))
+                                    as log4net.Util.ThreadContextStack, out stackArray))
                         {
                             p[key] = stackArray;
                         }
@@ -133,7 +133,7 @@ namespace log4net.loggly
             }
 
             return _loggingEventJSON;
-		}
+        }
 
         /// <summary>
         /// Merged Rendered log and formatted timestamp in the single Json object
@@ -161,7 +161,7 @@ namespace log4net.loggly
         private object GetExceptionInfo(LoggingEvent loggingEvent)
         {
             if (loggingEvent.ExceptionObject == null)
-                return null;
+            return null;
 
             dynamic exceptionInfo = new ExpandoObject();
             exceptionInfo.exceptionType = loggingEvent.ExceptionObject.GetType().FullName;
@@ -196,9 +196,9 @@ namespace log4net.loggly
             if (loggingEvent.MessageObject != null)
             {
                 if (loggingEvent.MessageObject.GetType() == typeof(string)
-                    //if it is sent by using InfoFormat method then treat it as a string message
-                || loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat"
-                || loggingEvent.MessageObject.GetType().FullName.Contains("StringFormatFormattedMessage"))
+                        //if it is sent by using InfoFormat method then treat it as a string message
+                        || loggingEvent.MessageObject.GetType().FullName == "log4net.Util.SystemStringFormat"
+                        || loggingEvent.MessageObject.GetType().FullName.Contains("StringFormatFormattedMessage"))
                 {
                     message = loggingEvent.MessageObject.ToString();
                 }
@@ -224,7 +224,7 @@ namespace log4net.loggly
         /// <param name="includeStackKey"></param>
         /// <returns></returns>
         private bool IncludeThreadStackValues(log4net.Util.ThreadContextStack stack,
-            out string[] stackArray)
+        out string[] stackArray)
         {
             if (stack != null && stack.Count > 0)
             {
@@ -245,6 +245,7 @@ namespace log4net.loggly
                 stackArray = null;
                 return false;
             }
+
         }
     }
 }
