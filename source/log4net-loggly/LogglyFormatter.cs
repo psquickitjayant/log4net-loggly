@@ -96,43 +96,20 @@ namespace log4net.loggly
                 }
             }
 
-            //converting event info to Json string
-            var _loggingEventJSON = JsonConvert.SerializeObject(_loggingInfo,
-            new JsonSerializerSettings()
+            string jsonMessage = string.Empty;
+            if (TryGetParsedJsonFromLog(_loggingInfo, _loggedObject, out jsonMessage))
             {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            });
-
-            //checking if _loggedObject is not null
-            //if it is not null then convert it into JSON string
-            //and concatenate to the _loggingEventJSON
-
-            if (_loggedObject != null)
+                return jsonMessage;
+            }
+            else
             {
-                //converting passed object to JSON string
-
-                var _loggedObjectJSON = JsonConvert.SerializeObject(_loggedObject,
+                //converting event info to Json string
+                return JsonConvert.SerializeObject(_loggingInfo,
                 new JsonSerializerSettings()
                 {
-                    PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                 });
-
-                //concatenating _loggedObjectJSON with _loggingEventJSON
-                //http://james.newtonking.com/archive/2014/08/04/json-net-6-0-release-4-json-merge-dependency-injection
-
-                JObject jEvent = JObject.Parse(_loggingEventJSON);
-                JObject jObject = JObject.Parse(_loggedObjectJSON);
-
-                jEvent.Merge(jObject, new JsonMergeSettings
-                {
-                    MergeArrayHandling = MergeArrayHandling.Union
-                });
-
-                _loggingEventJSON = jEvent.ToString();
             }
-
-            return _loggingEventJSON;
         }
 
         /// <summary>
@@ -144,13 +121,23 @@ namespace log4net.loggly
         private string ParseRenderedLog(string log, DateTime timeStamp)
         {
             dynamic _loggingInfo = new ExpandoObject();
-            _loggingInfo.message = log;
             _loggingInfo.timestamp = timeStamp.ToString(@"yyyy-MM-ddTHH\:mm\:ss.fffzzz");
 
-            //converting event info to Json string
-            var _loggingEventJSON = JsonConvert.SerializeObject(_loggingInfo);
-
-            return _loggingEventJSON;
+            string jsonMessage = string.Empty;
+            if (TryGetParsedJsonFromLog(_loggingInfo, log, out jsonMessage))
+            {
+                return jsonMessage;
+            }
+            else
+            {
+                _loggingInfo.message = log;
+                return JsonConvert.SerializeObject(_loggingInfo,
+                    new JsonSerializerSettings()
+                    {
+                        PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
+                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    });
+            }
         }
 
         /// <summary>
@@ -246,6 +233,64 @@ namespace log4net.loggly
                 return false;
             }
 
+        }
+
+        /// <summary>
+        /// Tries to merge log with the logged object or rendered log
+        /// and converts to JSON
+        /// </summary>
+        /// <param name="loggingInfo"></param>
+        /// <param name="loggingObject"></param>
+        /// <param name="_loggingEventJSON"></param>
+        /// <returns></returns>
+        private bool TryGetParsedJsonFromLog(dynamic loggingInfo, object loggingObject, out string _loggingEventJSON)
+        {
+            //serialize the dynamic object to string
+            _loggingEventJSON = JsonConvert.SerializeObject(loggingInfo,
+            new JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            }); 
+            
+            //if loggingObject is null then we need to go to further step
+            if (loggingObject == null)
+                return false;
+            
+            try
+            {
+                string _loggedObjectJSON = string.Empty;
+                if (loggingObject.GetType() == typeof(string))
+                {
+                    _loggedObjectJSON = loggingObject.ToString();
+                }
+                else
+                {
+                    _loggedObjectJSON = JsonConvert.SerializeObject(loggingObject,
+                        new JsonSerializerSettings()
+                        {
+                            PreserveReferencesHandling = PreserveReferencesHandling.Arrays,
+                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                        });
+                }
+
+                //try to parse the logging object
+                JObject jObject = JObject.Parse(_loggedObjectJSON);
+                JObject jEvent = JObject.Parse(_loggingEventJSON);
+
+                //merge these two objects into one JSON string
+                jEvent.Merge(jObject, new JsonMergeSettings
+                {
+                    MergeArrayHandling = MergeArrayHandling.Union
+                });
+
+                _loggingEventJSON = jEvent.ToString();
+                
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
