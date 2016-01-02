@@ -7,5 +7,7 @@ namespace log4net.loggly
 		string UserAgent { get; set; }
 		int TimeoutInSeconds { get; set; }
         string Tag { get; set; }
-	}
+        string LogicalThreadContextKeys { get; set; }
+        string GlobalContextKeys { get; set; }
+    }
 }

@@ -29,11 +29,17 @@ namespace log4net.loggly
 
         public string Tag { get; set; }
 
-		public LogglyAppenderConfig()
+        public string LogicalThreadContextKeys { get; set; }
+
+        public string GlobalContextKeys { get; set; }
+
+        public LogglyAppenderConfig()
 		{
 			UserAgent = "loggly-log4net-appender";
 			TimeoutInSeconds = 30;
             Tag = "log4net";
+            LogicalThreadContextKeys = null;
+            GlobalContextKeys = null;
 		}
 	}
 }
