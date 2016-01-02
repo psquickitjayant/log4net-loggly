@@ -8,7 +8,7 @@ Download log4net-loggly package from NuGet. Use the following command.
     Install-Package log4net-loggly
 
 Add the following code in your web.config to configure LogglyAppender in your application
-
+```
     <configSections>
       <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net" />
     </configSections>
@@ -20,10 +20,12 @@ Add the following code in your web.config to configure LogglyAppender in your ap
       <appender name="LogglyAppender" type="log4net.loggly.LogglyAppender, log4net-loggly">
         <rootUrl value="http://logs-01.loggly.com/" />
         <inputKey value="your-customer-token" />
-		<tag value="your-custom-tag" />
+	<tag value="your-custom-tag" />
+	<logicalThreadContextKeys value="lkey1,lkey2" />
+	<globalContextKeys value="gkey1,gkey2" />
       </appender>
     </log4net>
-    
+```    
 
 You can also use **layout** with in the Config to render logs according to your Pattern Layouts
 
