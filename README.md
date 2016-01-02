@@ -20,9 +20,9 @@ Add the following code in your web.config to configure LogglyAppender in your ap
       <appender name="LogglyAppender" type="log4net.loggly.LogglyAppender, log4net-loggly">
         <rootUrl value="http://logs-01.loggly.com/" />
         <inputKey value="your-customer-token" />
-	<tag value="your-custom-tag" />
-	<logicalThreadContextKeys value="lkey1,lkey2" />
-	<globalContextKeys value="gkey1,gkey2" />
+		<tag value="your-custom-tag" />
+		<logicalThreadContextKeys value="lkey1,lkey2" />
+		<globalContextKeys value="gkey1,gkey2" />
       </appender>
     </log4net>
 ```    
