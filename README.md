@@ -20,12 +20,20 @@ Add the following code in your web.config to configure LogglyAppender in your ap
       <appender name="LogglyAppender" type="log4net.loggly.LogglyAppender, log4net-loggly">
         <rootUrl value="http://logs-01.loggly.com/" />
         <inputKey value="your-customer-token" />
-		<tag value="your-custom-tag" />
-		<logicalThreadContextKeys value="lkey1,lkey2" />
-		<globalContextKeys value="gkey1,gkey2" />
+		<tag value="your-custom-tag" /> 
+		<logicalThreadContextKeys value="lkey1,lkey2" /> <!-- optional -->
+		<globalContextKeys value="gkey1,gkey2" /> <!-- optional -->
       </appender>
     </log4net>
 ```    
+To send **GlobalContext** and **LogicalThreadContext** properties in your log you need define the list of used properties in the configuration. 
+
+For GlobalContext Properties use 
+```<globalContextKeys value="gkey1,gkey2" />```
+
+For LogicalThreadContext Properties 
+```<logicalThreadContextKeys value="lkey1,lkey2" />```
+
 
 You can also use **layout** with in the Config to render logs according to your Pattern Layouts
 
