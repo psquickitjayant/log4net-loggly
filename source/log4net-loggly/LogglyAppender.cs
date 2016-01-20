@@ -21,6 +21,8 @@ namespace log4net.loggly
 		public string UserAgent { set { Config.UserAgent = value; } }
 		public int TimeoutInSeconds { set { Config.TimeoutInSeconds = value; } }
         public string Tag { set { Config.Tag = value; } }
+        public string LogicalThreadContextKeys { set { Config.LogicalThreadContextKeys = value; } }
+        public string GlobalContextKeys { set { Config.GlobalContextKeys = value; } }
 
         protected override void Append(LoggingEvent loggingEvent)
         {

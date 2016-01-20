@@ -12,6 +12,7 @@ namespace log4net.loggly
     public class LogglyFormatter : ILogglyFormatter
     {
         private Process _currentProcess;
+        private ILogglyAppenderConfig _config;
 
         public LogglyFormatter()
         {
@@ -20,6 +21,7 @@ namespace log4net.loggly
 
         public virtual void AppendAdditionalLoggingInformation(ILogglyAppenderConfig config, LoggingEvent loggingEvent)
         {
+            this._config = config;
         }
 
         public virtual string ToJson(LoggingEvent loggingEvent)
@@ -78,20 +80,58 @@ namespace log4net.loggly
                 var p = _loggingInfo as IDictionary<string, object>;
                 foreach (string key in _threadContextProperties)
                 {
-                    //handling threadstack
-                    if (ThreadContext.Properties[key].GetType() ==
-                            typeof(log4net.Util.ThreadContextStack))
+                    if ((ThreadContext.Properties[key] as IFixingRequired) != null
+                        && (ThreadContext.Properties[key] as IFixingRequired).GetFixedObject() != null)
                     {
-                        string[] stackArray;
-                        if (IncludeThreadStackValues(ThreadContext.Properties[key]
-                                    as log4net.Util.ThreadContextStack, out stackArray))
-                        {
-                            p[key] = stackArray;
-                        }
+                        p[key] = (ThreadContext.Properties[key] as IFixingRequired).GetFixedObject();
                     }
                     else
                     {
-                        p[key] = ThreadContext.Properties[key];
+                        p[key] = ThreadContext.Properties[key].ToString();
+                    }
+                }
+            }
+
+            //handling logicalthreadcontext properties
+            if (this._config.LogicalThreadContextKeys != null)
+            {
+                var ltp = _loggingInfo as IDictionary<string, object>;
+                string[] _LogicalThreadContextProperties = this._config.LogicalThreadContextKeys.Split(',');
+                foreach (string key in _LogicalThreadContextProperties)
+                {
+                    if (LogicalThreadContext.Properties[key] != null)
+                    {
+                        if ((LogicalThreadContext.Properties[key] as IFixingRequired) != null
+                            && (LogicalThreadContext.Properties[key] as IFixingRequired).GetFixedObject() != null)
+                        {
+                            ltp[key] = (LogicalThreadContext.Properties[key] as IFixingRequired).GetFixedObject();
+                        }
+                        else
+                        {
+                            ltp[key] = LogicalThreadContext.Properties[key].ToString();
+                        }
+                    }
+                }
+            }
+
+            //handling globalcontext properties
+            if (this._config.GlobalContextKeys != null)
+            {
+                var gcp = _loggingInfo as IDictionary<string, object>;
+                string[] _globalContextProperties = this._config.GlobalContextKeys.Split(',');
+                foreach (string key in _globalContextProperties)
+                {
+                    if (GlobalContext.Properties[key] != null)
+                    {
+                        if ((GlobalContext.Properties[key] as IFixingRequired) != null
+                            && (GlobalContext.Properties[key] as IFixingRequired).GetFixedObject() != null)
+                        {
+                            gcp[key] = (GlobalContext.Properties[key] as IFixingRequired).GetFixedObject();
+                        }
+                        else
+                        {
+                            gcp[key] = GlobalContext.Properties[key].ToString();
+                        }
                     }
                 }
             }
@@ -201,38 +241,6 @@ namespace log4net.loggly
                 message = "null";
             }
             return message;
-        }
-
-        /// <summary>
-        /// Returns whether to include stack array or not
-        /// Also outs the stack array if needed to include
-        /// </summary>
-        /// <param name="stack"></param>
-        /// <param name="includeStackKey"></param>
-        /// <returns></returns>
-        private bool IncludeThreadStackValues(log4net.Util.ThreadContextStack stack,
-        out string[] stackArray)
-        {
-            if (stack != null && stack.Count > 0)
-            {
-                stackArray = new string[stack.Count];
-                for (int n = stack.Count - 1; n >= 0; n--)
-                {
-                    stackArray[n] = stack.Pop();
-                }
-
-                foreach (string stackValue in stackArray)
-                {
-                    stack.Push(stackValue);
-                }
-                return true;
-            }
-            else
-            {
-                stackArray = null;
-                return false;
-            }
-
         }
 
         /// <summary>
