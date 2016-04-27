@@ -12,11 +12,12 @@ namespace log4net.loggly
 
 		private ILogglyAppenderConfig Config = new LogglyAppenderConfig();
 
-        public string RootUrl { set { Config.RootUrl = value; } }
-        public string InputKey { set { Config.InputKey = value; } }
-        public string UserAgent { set { Config.UserAgent = value; } }
-        public int TimeoutInSeconds { set { Config.TimeoutInSeconds = value; } }
-        public string Tag { set { Config.Tag = value; } }
+		public string RootUrl { set { Config.RootUrl = value; } }
+		public string InputKey { set { Config.InputKey = value; } }
+		public string UserAgent { set { Config.UserAgent = value; } }
+		public string LogMode { set { Config.LogMode = value; } }
+		public int TimeoutInSeconds { set { Config.TimeoutInSeconds = value; } }
+		public string Tag { set { Config.Tag = value; } }
 
 		protected override void Append(LoggingEvent loggingEvent)
 		{
