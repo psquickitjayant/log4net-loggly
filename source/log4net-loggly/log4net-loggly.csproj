@@ -52,6 +52,7 @@
     <Compile Include="ILogglyAppenderConfig.cs" />
     <Compile Include="ILogglyClient.cs" />
     <Compile Include="LogglyAppenderConfig.cs" />
+    <Compile Include="LogglyAsyncHandler.cs" />
     <Compile Include="LogglyBufferringAppender.cs" />
     <Compile Include="LogglyClient.cs" />
     <Compile Include="LogglyFormatter.cs" />
