@@ -41,6 +41,10 @@ You can also use **layout** with in the Config to render logs according to your 
          <conversionPattern value="%date [%thread] %-5level %logger %message" />
      </layout>
 
+By default, library uses Loggly /bulk end point (https://www.loggly.com/docs/http-bulk-endpoint/). To use /inputs endpoint, add the following configuration in config file.
+```<logMode value="inputs" />```
+
+
 Add the following entry in your AssemblyInfo.cs
 ```
 [assembly: log4net.Config.XmlConfigurator(Watch = true)]
