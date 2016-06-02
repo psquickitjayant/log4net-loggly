@@ -1,8 +1,9 @@
 namespace log4net.loggly
 {
-	public class LogglyAppenderConfig: ILogglyAppenderConfig
+	public class LogglyAppenderConfig : ILogglyAppenderConfig
 	{
 		private string _rootUrl;
+		private string _logMode;
 		public string RootUrl
 		{
 			get { return _rootUrl; }
@@ -14,9 +15,18 @@ namespace log4net.loggly
 				{
 					_rootUrl += "/";
 				}
-				if (!_rootUrl.EndsWith("inputs/"))
+			}
+		}
+
+		public string LogMode
+		{
+			get { return _logMode; }
+			set
+			{
+				_logMode = value;
+				if (!_logMode.EndsWith("/"))
 				{
-					_rootUrl += "inputs/";
+					_logMode = _logMode.ToLower() + "/";
 				}
 			}
 		}
@@ -27,19 +37,20 @@ namespace log4net.loggly
 
 		public int TimeoutInSeconds { get; set; }
 
-        public string Tag { get; set; }
+		public string Tag { get; set; }
 
-        public string LogicalThreadContextKeys { get; set; }
+		public string LogicalThreadContextKeys { get; set; }
 
-        public string GlobalContextKeys { get; set; }
+		public string GlobalContextKeys { get; set; }
 
-        public LogglyAppenderConfig()
+		public LogglyAppenderConfig()
 		{
 			UserAgent = "loggly-log4net-appender";
 			TimeoutInSeconds = 30;
-            Tag = "log4net";
-            LogicalThreadContextKeys = null;
-            GlobalContextKeys = null;
+			Tag = "log4net";
+			LogMode = "bulk";
+			LogicalThreadContextKeys = null;
+			GlobalContextKeys = null;
 		}
 	}
 }
