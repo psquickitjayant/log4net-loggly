@@ -44,9 +44,9 @@ namespace log4net.loggly
 
 		protected virtual HttpWebRequest CreateWebRequest(ILogglyAppenderConfig config, string tag)
 		{
-			var url = String.Concat(config.RootUrl, config.InputKey);
-	        //adding userAgent as tag in the log
-	        url = String.Concat(url, "/tag/" + tag);
+			var url = String.Concat(config.RootUrl, config.LogMode, config.InputKey);
+	        	//adding userAgent as tag in the log
+	        	url = String.Concat(url, "/tag/" + tag);
 			var request = (HttpWebRequest)WebRequest.Create(url);
 			request.Method = "POST";
 			request.ReadWriteTimeout = request.Timeout = config.TimeoutInSeconds * 1000;
