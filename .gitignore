@@ -1,0 +1,9 @@
+*.user
+*.suo
+*.dotCover
+_ReSharper*
+source/_ReSharper.log4net-loggly/*
+source/log4net-loggly-console/bin/*
+source/log4net-loggly-console/obj/*
+source/log4net-loggly/bin/*
+source/log4net-loggly/obj/*

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>log4net-loggly</id>
+    <version>7.2.3</version>
+    <authors>Loggly</authors>
+    <owners>Loggly</owners>
+    <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
+    <projectUrl>http://github.com/loggly/log4net-loggly</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Custom log4Net Appender to send logs to Loggly</description>
+    <releaseNotes>Decrease wait time interval for bulk mode.</releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags>Loggly-log4net log4net appender logs</tags>
+    <dependencies>
+      <dependency id="log4net" version="2.0.3" />
+      <dependency id="Newtonsoft.Json" version="8.0.1" />
+    </dependencies>
+  </metadata>
+</package>
